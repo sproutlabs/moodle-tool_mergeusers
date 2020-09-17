@@ -176,24 +176,11 @@ class GenericTableMerger implements TableMerger
     }
 
     private function notify_admin($json_encode,$user) {
-        $site = get_site();
         $admin = get_admin();
         $message = "";
         $subject = "Update course completion reaggregate for user ".$user;
         $message .= $json_encode;
-        //Send the message
-        $eventdata = new \stdClass();
-        $eventdata->modulename = 'moodle';
-        $eventdata->userfrom = $admin;
-        $eventdata->userto = $admin;
-        $eventdata->subject = $subject;
-        $eventdata->fullmessage = $message;
-        $eventdata->fullmessageformat = FORMAT_PLAIN;
-        $eventdata->fullmessagehtml = '';
-        $eventdata->smallmessage = '';
-        $eventdata->component = 'tool_mergeusers';
-        $eventdata->name = 'mergeusers';
-        message_send($eventdata);
+        email_to_user($admin,$admin,$subject,$message);
     }
 
     protected function updateCourseCompletion($data, $idsToRemove, &$actionLog, &$errorMessages){
