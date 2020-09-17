@@ -69,8 +69,6 @@ class GenericTableMerger implements TableMerger
      */
     public function merge($data, &$actionLog, &$errorMessages)
     {
-
-
         foreach ($data['userFields'] as $fieldName) {
             $recordsToUpdate = $this->get_records_to_be_updated($data, $fieldName);
             if (count($recordsToUpdate) == 0) {
@@ -83,8 +81,8 @@ class GenericTableMerger implements TableMerger
 
             if (isset($data['compoundIndex'])) {
                 $this->mergeCompoundIndex($data, $fieldName,
-                    $this->getOtherFieldsOnCompoundIndex($fieldName, $data['compoundIndex']), $recordsToModify,
-                    $actionLog, $errorMessages);
+                        $this->getOtherFieldsOnCompoundIndex($fieldName, $data['compoundIndex']), $recordsToModify,
+                        $actionLog, $errorMessages);
             }
 
             $this->updateAllRecords($data, $recordsToModify, $fieldName, $actionLog, $errorMessages);
@@ -121,18 +119,15 @@ class GenericTableMerger implements TableMerger
      * @param array $errorMessages Array where to append any error occurred.
      */
     protected function mergeCompoundIndex($data, $userfield, $otherfields, &$recordsToModify, &$actionLog,
-                                          &$errorMessages)
+            &$errorMessages)
     {
         global $DB;
 
         $otherfieldsstr = implode(', ', $otherfields);
         $sql = 'SELECT id, ' . $userfield . ', ' . $otherfieldsstr .
-            ' FROM {' . $data['tableName'] . '} ' .
-            ' WHERE ' . $userfield . ' IN ( ?, ?)';
+                ' FROM {' . $data['tableName'] . '} ' .
+                ' WHERE ' . $userfield . ' IN ( ?, ?)';
         $result = $DB->get_records_sql($sql, array($data['fromid'], $data['toid']));
-
-
-
 
         $itemArr = array();
         $idsToRemove = array();
@@ -166,8 +161,6 @@ class GenericTableMerger implements TableMerger
                 unset($recordsToModify[$id]);
             }
         }
-
-
 
         $this->cleanRecordsOnCompoundIndex($data, $idsToRemove, $actionLog, $errorMessages);
 
@@ -298,13 +291,13 @@ class GenericTableMerger implements TableMerger
         $tableName = $CFG->prefix . $data['tableName'];
         $idString = implode(', ', $recordsToModify);
         $updateRecords = "UPDATE " . $tableName . ' ' .
-            " SET " . $fieldName . " = '" . $data['toid'] .
-            "' WHERE " . self::PRIMARY_KEY . " IN (" . $idString . ")";
+                " SET " . $fieldName . " = '" . $data['toid'] .
+                "' WHERE " . self::PRIMARY_KEY . " IN (" . $idString . ")";
 
         try {
             if (!$DB->execute($updateRecords)) {
                 $errorMessages[] = get_string('tableko', 'tool_mergeusers', $data['tableName']) .
-                    ': ' . $DB->get_last_error();
+                        ': ' . $DB->get_last_error();
             }
             $actionLog[] = $updateRecords;
         } catch (Exception $e) {
@@ -312,11 +305,11 @@ class GenericTableMerger implements TableMerger
             // therefore, there will be only a single record from one or other user.
             $useridtoclean = ($this->newidtomaintain) ? $data['fromid'] : $data['toid'];
             $deleteRecord = "DELETE FROM " . $tableName .
-                " WHERE " . $fieldName . " = '" . $useridtoclean . "'";
+                    " WHERE " . $fieldName . " = '" . $useridtoclean . "'";
 
             if (!$DB->execute($deleteRecord)) {
                 $errorMessages[] = get_string('tableko', 'tool_mergeusers', $data['tableName']) .
-                    ': ' . $DB->get_last_error();
+                        ': ' . $DB->get_last_error();
             }
             $actionLog[] = $deleteRecord;
         }
