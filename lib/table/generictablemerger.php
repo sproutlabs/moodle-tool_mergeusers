@@ -40,10 +40,12 @@ class GenericTableMerger implements TableMerger
      * @var int
      */
     protected $newidtomaintain;
+    protected $forcemergeagain;
 
     public function __construct()
     {
         $this->newidtomaintain = get_config('tool_mergeusers', 'uniquekeynewidtomaintain');
+        $this->forcemergeagain = get_config('tool_mergeusers', 'forcemergeagain');
     }
 
     /**
@@ -71,9 +73,13 @@ class GenericTableMerger implements TableMerger
     {
         foreach ($data['userFields'] as $fieldName) {
             $recordsToUpdate = $this->get_records_to_be_updated($data, $fieldName);
-            if (count($recordsToUpdate) == 0) {
-                //this userid is not present in these table and field names
-                continue;
+           
+            if(!$this->forcemergeagain){
+       
+                if (count($recordsToUpdate) == 0) {
+                    //this userid is not present in these table and field names
+                    continue;
+                }   
             }
 
             $keys = array_keys($recordsToUpdate); // get the 'id' field from the resultset

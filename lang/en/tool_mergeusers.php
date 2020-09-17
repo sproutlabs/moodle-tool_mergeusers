@@ -191,3 +191,5 @@ $string['starttime'] = 'Started merging at {$a}';
 $string['finishtime'] = 'Finished merging at {$a}';
 $string['timetaken'] = 'Merge took {$a} seconds';
 $string['privacy:metadata'] = 'The Merge User Accounts plugin does not store any personal data.';
+$string['forcemergeagain'] = 'Forces the previously merged again to re merge';
+$string['forcemergeagain_desc'] = 'Forces the previously merged again to re merge for calculating course completion aggregation';
