@@ -168,43 +168,60 @@ class GenericTableMerger implements TableMerger
             }
         }
 
-        $this->cleanRecordsOnCompoundIndex($data, $idsToRemove, $actionLog, $errorMessages);
-
-
         if($data['tableName']=='course_completions'){
             
             $this->updateCourseCompletion($data, $idsToRemove, $actionLog, $errorMessages);
 
         }
+        $this->cleanRecordsOnCompoundIndex($data, $idsToRemove, $actionLog, $errorMessages);
+
+
+
 
         unset($idsToRemove); //free memory
         unset($sql);
     }
 
-    private function notify_admin($json_encode,$user) {
+    private function notify_admin($json_encode, $touser,$fromuser) {
         $admin = get_admin();
         $message = "";
-        $subject = "Update course completion reaggregate for user ".$user;
+        $subject = "Course completion merging from user to remove (".$fromuser.") and user to keep (".$touser.") result";
         $message .= $json_encode;
         email_to_user($admin,$admin,$subject,$message);
     }
 
     protected function updateCourseCompletion($data, $idsToRemove, &$actionLog, &$errorMessages){
         global $DB;
-        $sql = 'SELECT *  FROM {' . $data['tableName'] . '}'. ' WHERE userid = '.$data['toid'].' AND timecompleted is NULL';;
-        $completionResults = $DB->get_records_sql($sql);
-        $json_encode = json_encode($completionResults);
-        
-        foreach ($completionResults as $completionResult){
-            $recordToUpdate =  "UPDATE {" . $data['tableName'] . '}' .
-                " SET reaggregate =" . time() .
-                " WHERE " . self::PRIMARY_KEY . " IN (" . $completionResult->id . ")";
+        $completionRecordsToid =  $DB->get_records('course_completions',array('userid' =>$data['toid'])); ;
+        $completionRecordsFromid =  $DB->get_records('course_completions',array('userid' =>$data['fromid'])); ;
+        foreach ($completionRecordsToid as $completionRecord){
+            $existing = $DB->get_record('course_completions',array('userid' => $data['fromid'],'course'=>$completionRecord->course));
+            if($existing){
+                $params = array(
+                    'reaggregate' => time()
+                );
+                $params['id'] = $completionRecord->id;
+                if($existing->timeenrolled && $existing->timeenrolled > $completionRecord->timeenrolled){
+                    $params['timeenrolled'] = $existing->timeenrolled;
+                }
 
-            $DB->execute($recordToUpdate);
+                if($existing->timestarted && $existing->timestarted > $completionRecord->timestarted){
+                    $params['timestarted'] = $existing->timestarted;
+                }
+
+                if($existing->timecompleted && $existing->timecompleted > $completionRecord->timecompleted){
+                    $params['timecompleted'] = $existing->timecompleted;
+                }
+                
+                $DB->update_record('course_completions', $params);
+            }
 
         }
-        
-        $this->notify_admin($json_encode,$data['toid']);
+
+        $jsonData = [];
+        $jsonData['fromid'] = $completionRecordsFromid;
+        $jsonData['toid'] = $completionRecordsToid;
+        $this->notify_admin(json_encode($jsonData),$data['toid'],$data['fromid']);
         
     }
 
