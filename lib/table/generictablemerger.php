@@ -201,15 +201,15 @@ class GenericTableMerger implements TableMerger
                     'reaggregate' => time()
                 );
                 $params['id'] = $completionRecord->id;
-                if(!$completionRecord->timeenrolled && $existing->timeenrolled){
+                if($existing->timeenrolled && $existing->timeenrolled > $completionRecord->timeenrolled){
                     $params['timeenrolled'] = $existing->timeenrolled;
                 }
 
-                if(!$completionRecord->timestarted && $existing->timestarted){
+                if($existing->timestarted && $existing->timestarted > $completionRecord->timestarted){
                     $params['timestarted'] = $existing->timestarted;
                 }
 
-                if(!$completionRecord->timecompleted && $existing->timecompleted){
+                if($existing->timecompleted && $existing->timecompleted > $completionRecord->timecompleted){
                     $params['timecompleted'] = $existing->timecompleted;
                 }
                 
